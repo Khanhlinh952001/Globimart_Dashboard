@@ -95,6 +95,7 @@ export function SignUpForm(): React.JSX.Element {
           firstName: values.firstName,
           lastName: values.lastName,
           uid: user.uid,
+          storeName:values.storeName ,
           email: values.email,
           createdAt: new Date(),
           address: values.address,
