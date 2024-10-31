@@ -12,7 +12,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Controller, useForm } from 'react-hook-form';
 import { z as zod } from 'zod';
-
 import { authClient } from '@/lib/auth/client';
 
 const schema = zod.object({ email: zod.string().min(1, { message: 'Email is required' }).email() });

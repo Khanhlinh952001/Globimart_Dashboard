@@ -6,7 +6,16 @@ export const paths = {
     account: '/dashboard/account',
     customers: '/dashboard/customers',
     integrations: '/dashboard/integrations',
-    settings: '/dashboard/settings',
+    settings: '/dashboard/settings/account',
+    products: '/dashboard/products',
+    productList: '/dashboard/products/list',
+    createProduct: '/dashboard/products/create',
+    addProduct :'/dashboard/products/add',
+    orders: '/dashboard/orders',
+    orderList: '/dashboard/orders/list',
+    orderCreate: '/dashboard/orders/create',
+    orderDetails: '/dashboard/orders/details',
+    flashSales:'/dashboard/flashSales'
   },
   errors: { notFound: '/errors/not-found' },
 } as const;

@@ -1,98 +1,85 @@
-'use client';
+import { doc, getDoc } from 'firebase/firestore'; // Import các hàm Firestore
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  type UserCredential,
+  onAuthStateChanged
+} from 'firebase/auth';
+import { type User } from '@/types/user';
+import { auth } from '../firebase';
+import { fireStore } from '../firebase'; // Import Firestore
 
-import type { User } from '@/types/user';
-
-function generateToken(): string {
-  const arr = new Uint8Array(12);
-  window.crypto.getRandomValues(arr);
-  return Array.from(arr, (v) => v.toString(16).padStart(2, '0')).join('');
+// Định nghĩa interface cho kết quả xác thực
+interface AuthResult {
+  user: any;
+  error: string | null;
 }
 
-const user = {
-  id: 'USR-000',
-  avatar: '/assets/avatar.png',
-  firstName: 'Sofia',
-  lastName: 'Rivers',
-  email: 'sofia@devias.io',
-} satisfies User;
-
-export interface SignUpParams {
-  firstName: string;
-  lastName: string;
+// Định nghĩa interface cho thông tin đăng nhập
+interface Credentials {
   email: string;
   password: string;
 }
 
-export interface SignInWithOAuthParams {
-  provider: 'google' | 'discord';
-}
-
-export interface SignInWithPasswordParams {
-  email: string;
-  password: string;
-}
-
-export interface ResetPasswordParams {
-  email: string;
-}
-
-class AuthClient {
-  async signUp(_: SignUpParams): Promise<{ error?: string }> {
-    // Make API request
-
-    // We do not handle the API, so we'll just generate a token and store it in localStorage.
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
-
-    return {};
-  }
-
-  async signInWithOAuth(_: SignInWithOAuthParams): Promise<{ error?: string }> {
-    return { error: 'Social authentication not implemented' };
-  }
-
-  async signInWithPassword(params: SignInWithPasswordParams): Promise<{ error?: string }> {
-    const { email, password } = params;
-
-    // Make API request
-
-    // We do not handle the API, so we'll check if the credentials match with the hardcoded ones.
-    if (email !== 'sofia@devias.io' || password !== 'Secret1') {
-      return { error: 'Invalid credentials' };
+export const authClient = {
+  getUser: async (): Promise<{ user: User | null; error?: string }> => {
+    return new Promise((resolve) => { // Bỏ async ở đây
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const userDoc = doc(fireStore, 'Shops', user.uid);
+          const userSnapshot = await getDoc(userDoc);
+            console.log(userSnapshot.data())
+          if (userSnapshot.exists()) {
+              resolve({ user: userSnapshot.data() as User, error: undefined });
+          } else {
+            resolve({ user: null, error: 'User data not found' });
+          }
+        } else {
+          resolve({ user: null, error: 'No user logged in' });
+        }
+      });
+    });
+  },
+  // Phương thức đăng ký tài khoản mới
+  signUp: async ({ email, password }: Credentials): Promise<AuthResult> => {
+    try {
+      const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return { user: userCredential.user, error: null };
+    } catch (error) {
+      return { user: null, error: (error as Error).message };
     }
+  },
 
-    const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
-
-    return {};
-  }
-
-  async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Password reset not implemented' };
-  }
-
-  async updatePassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Update reset not implemented' };
-  }
-
-  async getUser(): Promise<{ data?: User | null; error?: string }> {
-    // Make API request
-
-    // We do not handle the API, so just check if we have a token in localStorage.
-    const token = localStorage.getItem('custom-auth-token');
-
-    if (!token) {
-      return { data: null };
+  // Phương thức đăng nhập bằng email và mật khẩu
+  signInWithPassword: async ({ email, password }: Credentials): Promise<AuthResult> => {
+    try {
+      const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+      return { user: userCredential.user, error: null };
+    } catch (error) {
+      return { user: null, error: (error as Error).message };
     }
+  },
 
-    return { data: user };
-  }
+  // Phương thức đăng xuất
+  signOut: async (): Promise<AuthResult> => {
+    try {
+      await signOut(auth);
+      return { user: null, error: null };
+    } catch (error) {
+      return { user: null, error: (error as Error).message };
+    }
+  },
 
-  async signOut(): Promise<{ error?: string }> {
-    localStorage.removeItem('custom-auth-token');
+  // Phương thức đặt lại mật khẩu
+  resetPassword: async ({ email }: { email: string }): Promise<AuthResult> => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { user: null, error: null };
+    } catch (error) {
+      return { user: null, error: (error as Error).message };
+    }
+  },
+};
 
-    return {};
-  }
-}
-
-export const authClient = new AuthClient();

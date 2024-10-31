@@ -11,16 +11,30 @@ import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
 import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
-
+import { useUser } from '@/hooks/use-user';
 import { usePopover } from '@/hooks/use-popover';
-
 import { MobileNav } from './mobile-nav';
 import { UserPopover } from './user-popover';
 
+interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+  logoUrl?: string; // Thêm dấu hỏi để cho phép logoUrl là undefined
+  // Thêm các thuộc tính khác nếu cần
+}
+
 export function MainNav(): React.JSX.Element {
   const [openNav, setOpenNav] = React.useState<boolean>(false);
-
+  const {user}= useUser();
+  console.log(user)
   const userPopover = usePopover<HTMLDivElement>();
+
+  if (user?.logoUrl) { // Kiểm tra xem user không phải là null và có logoUrl
+    console.log(user.logoUrl);
+  } else {
+    console.log("User không có sẵn hoặc logo URL không có sẵn.");
+  }
 
   return (
     <React.Fragment>
@@ -70,7 +84,7 @@ export function MainNav(): React.JSX.Element {
             <Avatar
               onClick={userPopover.handleOpen}
               ref={userPopover.anchorRef}
-              src="/assets/avatar.png"
+              src={user?.logoUrl}
               sx={{ cursor: 'pointer' }}
             />
           </Stack>

@@ -27,9 +27,9 @@ export function Budget({ diff, trend, sx, value }: BudgetProps): React.JSX.Eleme
           <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }} spacing={3}>
             <Stack spacing={1}>
               <Typography color="text.secondary" variant="overline">
-                Budget
+                 Tổng danh thu 
               </Typography>
-              <Typography variant="h4">{value}</Typography>
+              <Typography variant="h4">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value))}</Typography>
             </Stack>
             <Avatar sx={{ backgroundColor: 'var(--mui-palette-primary-main)', height: '56px', width: '56px' }}>
               <CurrencyDollarIcon fontSize="var(--icon-fontSize-lg)" />
