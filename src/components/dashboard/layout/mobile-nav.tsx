@@ -11,6 +11,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { ArrowSquareUpRight as ArrowSquareUpRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareUpRight';
 import { CaretUpDown as CaretUpDownIcon } from '@phosphor-icons/react/dist/ssr/CaretUpDown';
+import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import type { NavItemConfig } from '@/types/nav';
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
@@ -109,16 +110,24 @@ function renderNavItems({ items = [], pathname }: { items?: NavItemConfig[]; pat
 
 interface NavItemProps extends Omit<NavItemConfig, 'items'> {
   pathname: string;
+  items?: NavItemConfig[];
 }
 
-function NavItem({ disabled, external, href, icon, matcher, pathname, title }: NavItemProps): React.JSX.Element {
+function NavItem({ disabled, external, href, icon, matcher, pathname, title, items }: NavItemProps): React.JSX.Element {
+  const [isOpen, setIsOpen] = React.useState(false);
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
   const Icon = icon ? navIcons[icon] : null;
+  const hasItems = items && items.length > 0;
 
   return (
     <li>
       <Box
-        {...(href
+        onClick={() => {
+          if (hasItems) {
+            setIsOpen(!isOpen);
+          }
+        }}
+        {...(href && !hasItems
           ? {
               component: external ? 'a' : RouterLink,
               href,
@@ -144,6 +153,9 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title }: N
             cursor: 'not-allowed',
           }),
           ...(active && { bgcolor: 'var(--NavItem-active-background)', color: 'var(--NavItem-active-color)' }),
+          '&:hover': {
+            bgcolor: 'var(--NavItem-hover-background)',
+          },
         }}
       >
         <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>
@@ -162,7 +174,29 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title }: N
             {title}
           </Typography>
         </Box>
+        {Boolean(hasItems) && (
+          <CaretDownIcon
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s',
+            }}
+          />
+        )}
       </Box>
+      {hasItems && isOpen ? (
+        <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0, pl: 3 }}>
+          {items.map((item) => (
+            <NavItem 
+              key={item.key} 
+              pathname={pathname} 
+              title={item.title} 
+              href={item.href} 
+              icon={item.icon} 
+              items={item.items}
+            />
+          ))}
+        </Stack>
+      ) : null}
     </li>
   );
 }

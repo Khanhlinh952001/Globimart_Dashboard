@@ -72,7 +72,17 @@ console.log(products)
               {products.map((product: ProductPull) => (
                 <TableRow key={product.id}>
                   <TableCell title={product.id}>{shortenId(product.id)}</TableCell>
-                  <TableCell>{product.productName}</TableCell>
+                  <TableCell 
+                    title={product.productName}
+                    sx={{
+                      maxWidth: '200px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {product.productName}
+                  </TableCell>
                   <TableCell>{product.sizes.join(', ') || 'Free Size'}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
