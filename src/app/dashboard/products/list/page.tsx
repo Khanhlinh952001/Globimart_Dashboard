@@ -44,7 +44,7 @@ console.log(products)
   }
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" translate="no">
       <Typography variant="h4" component="h1" gutterBottom>
       Danh sách sản phẩm {products.length}
       </Typography>

@@ -31,3 +31,22 @@ html {
 body {
   height: 100%;
 }
+
+/* styles/globals.css */
+#google_translate_element select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+}
+/* Ẩn thanh thông báo của Google Translate */
+body > .skiptranslate > iframe.skiptranslate {
+  display: none !important; /* Ẩn iframe của Google Translate */
+}
+
+body > .skiptranslate {
+  position: static !important; /* Đảm bảo không có vị trí tĩnh */
+}
+
+body {
+  top: 0px !important; /* Đặt lại vị trí của body */
+}

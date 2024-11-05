@@ -100,7 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               View Details
             </Button>
             <Button size="small" variant="contained" color="secondary" onClick={handleAddProduct} disabled={loading}>
-              {loading ? 'Loading...' : 'Thêm sản phẩm'} {/* Show loading text */}
+              {loading ? 'Loading...' : 'Add Product'} {/* Show loading text */}
             </Button>
           </Box>
         </Card>

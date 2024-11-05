@@ -8,7 +8,7 @@ import { parseString } from 'xml2js'; // Import parseString
 import { ToastContainer } from 'react-toastify';
 import Typography from '@mui/material/Typography'; // Add import for Typography
 import ProductCard from './ProductCard'; // Import ProductCard component
-
+import GoogleTranslate from '@/components/GoogleTranslate';
 interface Product {
   ProductCode: string[];
   ProductName: string[];
@@ -84,6 +84,8 @@ export default function Page(): React.JSX.Element {
             ),
           }}
         />
+      <GoogleTranslate />
+
 
         {!searchValue && (
           <Grid item xs={12}>

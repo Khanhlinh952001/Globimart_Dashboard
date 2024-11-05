@@ -36,7 +36,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { fireStore, storage } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
-
 // New component for rendering HTML content safely
 function HTMLDescription({ html }: { html: string }) {
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
@@ -88,13 +87,25 @@ export default function ProductEdit({ params }: { params: { id: string } }): Rea
     imagePreview: 'https://png.pngtree.com/element_our/20190530/ourlarge/pngtree-flat-photo-icon-download-image_1257070.jpg',
   });
   const [loading, setLoading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setIsDirty(true);
     const { name, value } = event.target;
-    setProduct(prev => ({
-      ...prev,
-      [name]: ['price', 'stock', 'rating', 'reviews'].includes(name) ? Number(value) : value,
-    }));
+    setProduct(prev => {
+      const newValue = ['price', 'stock', 'rating', 'reviews'].includes(name) ? Number(value) : value;
+      
+      // Validate sales price cannot be higher than regular price
+      if (name === 'sales' && Number(value) > prev.price) {
+        toast.error('Sales price cannot be higher than regular price');
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        [name]: newValue,
+      };
+    });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -119,6 +130,7 @@ export default function ProductEdit({ params }: { params: { id: string } }): Rea
         features: product.features,
         images: product.images.map(image => image.url), // Save URLs to Firestore
       });
+      setIsDirty(false);
       toast.update(toastId, {
         render: "Product updated successfully! Redirecting...",
         type: "success",
@@ -144,23 +156,39 @@ export default function ProductEdit({ params }: { params: { id: string } }): Rea
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const newImages: ImageType[] = [];
-      for (const file of Array.from(files)) {
-        const uniqueFileName = `${uuidv4()}_${file.name}`;
-        const storageRef = ref(storage, `images/${uniqueFileName}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        newImages.push({ file, preview: URL.createObjectURL(file), url });
+      setLoading(true); // Add loading state
+      try {
+        const newImages: ImageType[] = [];
+        for (const file of Array.from(files)) {
+          if (file.size > 5000000) { // 5MB limit
+            toast.error(`File ${file.name} is too large. Max size is 5MB`);
+            continue;
+          }
+          const uniqueFileName = `${uuidv4()}_${file.name}`;
+          const storageRef = ref(storage, `images/${uniqueFileName}`);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          newImages.push({ file, preview: URL.createObjectURL(file), url });
+        }
+        setProduct(prev => ({
+          ...prev,
+          images: [...prev.images, ...newImages],
+          imagePreview: newImages[0]?.preview || prev.imagePreview
+        }));
+        toast.success('Images uploaded successfully');
+      } catch (error) {
+        toast.error('Error uploading images');
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-      setProduct(prev => ({
-        ...prev,
-        images: [...prev.images, ...newImages],
-        imagePreview: newImages[0]?.preview || prev.imagePreview
-      }));
     }
   };
 
   const removeImage = async (index: number) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
     const imageToDelete = product.images[index];
     if (imageToDelete.url) { // Use URL to reference the image in storage
       // Extract the storage path from the URL
@@ -226,6 +254,18 @@ export default function ProductEdit({ params }: { params: { id: string } }): Rea
     fetchProduct();
   }, [params.id]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, false] }],
@@ -251,8 +291,8 @@ export default function ProductEdit({ params }: { params: { id: string } }): Rea
   return (
     <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
       <Container maxWidth="lg">
-        <Typography variant="h4" sx={{ mb: 3 }}>
-          Edit Product
+        <Typography variant="h4" sx={{ mb: 3, pr: 1 }} display="flex">
+          Edit Product 
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
